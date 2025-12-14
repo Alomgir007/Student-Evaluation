@@ -3,782 +3,489 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Evaluation Platform (Online)</title>
+    <title>Student Evaluation Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; }
-        .card { transition: transform 0.2s; }
-        .card:hover { transform: translateY(-2px); }
-        .fade-in { animation: fadeIn 0.3s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        /* Loading Spinner */
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { slate: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 800: '#1e293b', 900: '#0f172a' } }
+                }
+            }
+        }
+    </script>
 </head>
-<body class="text-gray-800 h-screen flex flex-col overflow-hidden">
+<body class="text-slate-800 h-screen flex flex-col overflow-hidden bg-slate-50">
 
-    <div id="loadingOverlay" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
-        <div class="loader mb-4"></div>
-        <p class="text-gray-600 font-medium">Connecting to Database...</p>
+    <div id="loadingOverlay">
+        <div class="text-center">
+            <div class="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-slate-600 font-medium">Syncing with Cloud...</p>
+        </div>
     </div>
 
-    <header class="bg-indigo-600 text-white shadow-lg z-10">
-        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-            <div class="flex items-center gap-2">
-                <i class="fas fa-graduation-cap text-2xl"></i>
-                <h1 class="text-xl font-bold tracking-wide">EduEval Online</h1>
+    <header class="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-20">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="bg-indigo-600 text-white p-2 rounded-lg shadow-lg shadow-indigo-200">
+                    <i class="fas fa-graduation-cap text-xl"></i>
+                </div>
+                <h1 class="text-xl font-bold tracking-tight text-slate-800">EduEval <span class="text-indigo-600">Platform</span></h1>
             </div>
-            <div id="userInfo" class="hidden flex items-center gap-4">
-                <span id="welcomeText" class="font-medium"></span>
-                <button id="logoutBtn" class="bg-indigo-700 hover:bg-indigo-800 px-3 py-1 rounded text-sm transition">
-                    Logout
+            <div id="userInfo" class="hidden flex items-center gap-6">
+                <span id="welcomeText" class="font-medium text-slate-600 bg-slate-100 px-4 py-1.5 rounded-full text-sm"></span>
+                <button onclick="logout()" class="text-slate-500 hover:text-red-600 font-medium text-sm transition-colors flex items-center gap-2">
+                    <i class="fas fa-sign-out-alt"></i> Logout
                 </button>
             </div>
         </div>
     </header>
 
-    <main id="app" class="flex-1 overflow-y-auto p-4 relative">
+    <main id="app" class="flex-1 overflow-y-auto p-4 md:p-8 relative custom-scrollbar">
         
-        <div id="view-login" class="max-w-md mx-auto mt-10 bg-white p-8 rounded-lg shadow-md fade-in">
-            <h2 class="text-2xl font-bold mb-6 text-center text-indigo-600">Welcome Back</h2>
-            <div class="space-y-4">
-                <input type="text" id="loginName" placeholder="Name" class="w-full p-3 border rounded focus:outline-none focus:border-indigo-500">
-                <input type="password" id="loginPass" placeholder="Password" class="w-full p-3 border rounded focus:outline-none focus:border-indigo-500">
-                <button id="loginBtn" class="w-full bg-indigo-600 text-white py-3 rounded hover:bg-indigo-700 font-bold transition">Login</button>
-            </div>
-            <div class="mt-6 text-center text-sm text-gray-600">
-                <p>New here?</p>
-                <div class="flex justify-center gap-4 mt-2">
-                    <button onclick="window.showView('view-signup-teacher')" class="text-indigo-600 hover:underline">Signup as Teacher</button>
-                    <span>|</span>
-                    <button onclick="window.showView('view-signup-student')" class="text-indigo-600 hover:underline">Signup as Student</button>
+        <div id="view-login" class="min-h-[80vh] flex items-center justify-center fade-in">
+            <div class="max-w-md w-full bg-white p-10 rounded-3xl shadow-2xl border border-slate-100 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
+                
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold text-slate-900">Welcome Back</h2>
+                    <p class="text-slate-500 mt-2">Sign in to continue your journey</p>
+                </div>
+
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Username</label>
+                        <input type="text" id="loginName" placeholder="Enter your name" class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Password</label>
+                        <input type="password" id="loginPass" placeholder="••••••••" class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all">
+                    </div>
+                    <button onclick="login()" class="w-full bg-indigo-600 text-white py-4 rounded-xl hover:bg-indigo-700 font-bold shadow-lg shadow-indigo-200 transition-all transform hover:scale-[1.02]">Sign In</button>
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-slate-100 text-center">
+                    <p class="text-sm text-slate-500 mb-4">Don't have an account?</p>
+                    <div class="flex justify-center gap-4">
+                        <button onclick="showView('view-signup-teacher')" class="text-indigo-600 hover:text-indigo-800 font-medium text-sm hover:underline">Teacher Signup</button>
+                        <span class="text-slate-300">|</span>
+                        <button onclick="showView('view-signup-student')" class="text-indigo-600 hover:text-indigo-800 font-medium text-sm hover:underline">Student Signup</button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div id="view-signup-teacher" class="hidden max-w-lg mx-auto mt-6 bg-white p-8 rounded-lg shadow-md fade-in">
-            <h2 class="text-2xl font-bold mb-4 text-indigo-600">Teacher Registration</h2>
-            <div class="space-y-3">
-                <input id="tName" type="text" placeholder="Name" class="w-full p-2 border rounded">
-                <input id="tPass" type="password" placeholder="Password" class="w-full p-2 border rounded">
-                <input id="tSubj" type="text" placeholder="Subject" class="w-full p-2 border rounded">
-                <input id="tCode" type="text" placeholder="Course Code (e.g. CSE101)" class="w-full p-2 border rounded">
-                <input id="tContact" type="text" placeholder="Contact Number" class="w-full p-2 border rounded">
-                <input id="tAvail" type="text" placeholder="Availability" class="w-full p-2 border rounded">
-                <div class="flex gap-2 pt-4">
-                    <button onclick="window.showView('view-login')" class="flex-1 bg-gray-200 py-2 rounded">Cancel</button>
-                    <button id="signupTeacherBtn" class="flex-1 bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700">Register</button>
+        <div id="view-signup-teacher" class="hidden min-h-[80vh] flex items-center justify-center fade-in">
+            <div class="max-w-lg w-full bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
+                <h2 class="text-2xl font-bold mb-6 text-slate-800">Teacher Registration</h2>
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <input id="tName" type="text" placeholder="Full Name" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <input id="tPass" type="password" placeholder="Password" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <input id="tSubj" type="text" placeholder="Subject" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <input id="tCode" type="text" placeholder="Course Code (e.g. CSE101)" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <input id="tContact" type="text" placeholder="Contact Number" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <input id="tAvail" type="text" placeholder="Availability (e.g., Mon-Fri 10am-2pm)" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    
+                    <div class="flex gap-3 pt-6">
+                        <button onclick="showView('view-login')" class="flex-1 bg-slate-100 text-slate-600 py-3 rounded-xl hover:bg-slate-200 font-medium transition-colors">Cancel</button>
+                        <button onclick="signupTeacher()" class="flex-1 bg-indigo-600 text-white py-3 rounded-xl hover:bg-indigo-700 font-bold shadow-md shadow-indigo-200 transition-colors">Register</button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div id="view-signup-student" class="hidden max-w-lg mx-auto mt-6 bg-white p-8 rounded-lg shadow-md fade-in">
-            <h2 class="text-2xl font-bold mb-4 text-indigo-600">Student Registration</h2>
-            <div class="space-y-3 h-96 overflow-y-auto pr-2">
-                <input id="sName" type="text" placeholder="Name" class="w-full p-2 border rounded">
-                <input id="sPass" type="password" placeholder="Password" class="w-full p-2 border rounded">
-                <input id="sId" type="text" placeholder="University ID (e.g. 242-15-479)" class="w-full p-2 border rounded">
-                <input id="sNo" type="text" placeholder="Contact No" class="w-full p-2 border rounded">
-                <input id="sBatch" type="text" placeholder="Batch No" class="w-full p-2 border rounded">
-                <div class="bg-gray-50 p-3 rounded text-sm">
-                    <p class="mb-2 font-semibold">Previous CGPAs (comma separated)</p>
-                    <input id="sCgpa" type="text" placeholder="e.g. 3.5, 3.8, 4.0" class="w-full p-2 border rounded">
+        <div id="view-signup-student" class="hidden min-h-[80vh] flex items-center justify-center fade-in">
+            <div class="max-w-lg w-full bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
+                <h2 class="text-2xl font-bold mb-6 text-slate-800">Student Registration</h2>
+                <div class="space-y-4 max-h-[600px] overflow-y-auto custom-scrollbar pr-2">
+                    <div class="grid grid-cols-2 gap-4">
+                        <input id="sName" type="text" placeholder="Full Name" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <input id="sPass" type="password" placeholder="Password" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <input id="sId" type="text" placeholder="University ID (e.g. 242-15-479)" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <div class="grid grid-cols-2 gap-4">
+                        <input id="sNo" type="text" placeholder="Contact No" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <input id="sBatch" type="text" placeholder="Batch No" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div class="bg-indigo-50 p-4 rounded-xl text-sm border border-indigo-100">
+                        <p class="mb-2 font-semibold text-indigo-800">Academic History</p>
+                        <input id="sCgpa" type="text" placeholder="Previous CGPAs (e.g. 3.5, 3.8, 4.0)" class="w-full p-3 bg-white border border-indigo-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <input id="sSkills" type="text" placeholder="Skills (comma separated)" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <input id="sLinks" type="text" placeholder="Portfolio Links (comma separated)" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
-                <input id="sSkills" type="text" placeholder="Skills (comma separated)" class="w-full p-2 border rounded">
-                <input id="sLinks" type="text" placeholder="Links (comma separated)" class="w-full p-2 border rounded">
-            </div>
-            <div class="flex gap-2 pt-4">
-                <button onclick="window.showView('view-login')" class="flex-1 bg-gray-200 py-2 rounded">Cancel</button>
-                <button id="signupStudentBtn" class="flex-1 bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700">Register</button>
+                <div class="flex gap-3 pt-6 mt-2 border-t border-slate-100">
+                    <button onclick="showView('view-login')" class="flex-1 bg-slate-100 text-slate-600 py-3 rounded-xl hover:bg-slate-200 font-medium transition-colors">Cancel</button>
+                    <button onclick="signupStudent()" class="flex-1 bg-indigo-600 text-white py-3 rounded-xl hover:bg-indigo-700 font-bold shadow-md shadow-indigo-200 transition-colors">Register</button>
+                </div>
             </div>
         </div>
 
         <div id="view-teacher-dash" class="hidden container mx-auto fade-in">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div class="md:col-span-1 bg-white p-4 rounded-lg shadow h-fit">
-                    <div class="text-center mb-6">
-                        <div class="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto text-indigo-600 text-2xl font-bold mb-2">
-                            <span id="teacherInitialsDisplay">T</span>
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+                <div class="md:col-span-3 lg:col-span-3">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 sticky top-24">
+                        <div class="text-center mb-8">
+                            <div class="w-24 h-24 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-full flex items-center justify-center mx-auto text-indigo-600 text-3xl font-bold mb-4 shadow-inner">
+                                <span id="teacherInitialsDisplay">T</span>
+                            </div>
+                            <h3 id="teacherNameDisplay" class="font-bold text-xl text-slate-800">Teacher Name</h3>
+                            <p id="teacherCodeDisplay" class="text-sm font-medium text-indigo-600 bg-indigo-50 inline-block px-3 py-1 rounded-full mt-2">Code</p>
                         </div>
-                        <h3 id="teacherNameDisplay" class="font-bold text-lg">Teacher Name</h3>
-                        <p id="teacherCodeDisplay" class="text-sm text-gray-500">Code</p>
+                        <nav class="space-y-1">
+                            <button onclick="switchTab('t-profile')" class="nav-item w-full text-left p-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-all font-medium flex items-center active" data-tab="t-profile">
+                                <i class="fas fa-user w-6 text-center mr-3"></i> Profile
+                            </button>
+                            <button onclick="switchTab('t-chat')" class="nav-item w-full text-left p-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-all font-medium flex items-center" data-tab="t-chat">
+                                <i class="fas fa-comments w-6 text-center mr-3"></i> Messages
+                            </button>
+                            <button onclick="switchTab('t-search')" class="nav-item w-full text-left p-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-all font-medium flex items-center" data-tab="t-search">
+                                <i class="fas fa-search w-6 text-center mr-3"></i> Search Student
+                            </button>
+                            <button onclick="switchTab('t-eval')" class="nav-item w-full text-left p-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-all font-medium flex items-center" data-tab="t-eval">
+                                <i class="fas fa-star w-6 text-center mr-3"></i> Evaluate
+                            </button>
+                            <button onclick="switchTab('t-problems')" class="nav-item w-full text-left p-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-all font-medium flex items-center" data-tab="t-problems">
+                                <i class="fas fa-question-circle w-6 text-center mr-3"></i> Problems
+                            </button>
+                            <button onclick="switchTab('t-leaderboard')" class="nav-item w-full text-left p-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-all font-medium flex items-center" data-tab="t-leaderboard">
+                                <i class="fas fa-trophy w-6 text-center mr-3"></i> Leaderboards
+                            </button>
+                            <button onclick="switchTab('t-extracare')" class="nav-item w-full text-left p-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-all font-medium flex items-center" data-tab="t-extracare">
+                                <i class="fas fa-heart w-6 text-center mr-3 text-pink-500"></i> Extra Care
+                            </button>
+                        </nav>
                     </div>
-                    <nav class="space-y-2">
-                        <button onclick="window.switchTab('t-profile')" class="w-full text-left p-2 hover:bg-indigo-50 rounded t-tab active-tab" data-tab="t-profile"><i class="fas fa-user mr-2"></i> Profile</button>
-                        <button onclick="window.switchTab('t-search')" class="w-full text-left p-2 hover:bg-indigo-50 rounded t-tab" data-tab="t-search"><i class="fas fa-search mr-2"></i> Search Student</button>
-                        <button onclick="window.switchTab('t-eval')" class="w-full text-left p-2 hover:bg-indigo-50 rounded t-tab" data-tab="t-eval"><i class="fas fa-star mr-2"></i> Evaluate Student</button>
-                        <button onclick="window.switchTab('t-problems')" class="w-full text-left p-2 hover:bg-indigo-50 rounded t-tab" data-tab="t-problems"><i class="fas fa-question-circle mr-2"></i> Problems</button>
-                        <button onclick="window.switchTab('t-leaderboard')" class="w-full text-left p-2 hover:bg-indigo-50 rounded t-tab" data-tab="t-leaderboard"><i class="fas fa-trophy mr-2"></i> Leaderboards</button>
-                        <button onclick="window.switchTab('t-extracare')" class="w-full text-left p-2 hover:bg-indigo-50 rounded t-tab" data-tab="t-extracare"><i class="fas fa-heart mr-2"></i> Extra Care List</button>
-                    </nav>
                 </div>
 
-                <div class="md:col-span-3">
-                    <div id="t-profile" class="tab-content bg-white p-6 rounded-lg shadow">
-                        <div class="flex justify-between items-center mb-4 border-b pb-2">
-                            <h2 class="text-xl font-bold">My Profile</h2>
-                            <button onclick="window.enableEditMode('teacher')" class="text-sm bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded"><i class="fas fa-edit"></i> Edit</button>
+                <div class="md:col-span-9 lg:col-span-9">
+                    <div id="t-profile" class="tab-content bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+                        <div class="flex justify-between items-center mb-8 pb-4 border-b border-slate-100">
+                            <h2 class="text-2xl font-bold text-slate-800">My Profile</h2>
+                            <button onclick="enableEditMode('teacher')" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm">
+                                <i class="fas fa-edit mr-2"></i> Edit Profile
+                            </button>
                         </div>
-                        <div id="teacherProfileView" class="space-y-2 text-gray-700"></div>
-                        <div id="teacherProfileEdit" class="hidden space-y-4">
-                            <div class="p-4 bg-yellow-50 rounded text-sm text-yellow-700 mb-2">Note: Name and Course Code cannot be changed.</div>
-                            <div><label class="block text-sm font-medium">Subject</label><input id="editTSubject" type="text" class="w-full p-2 border rounded"></div>
-                            <div><label class="block text-sm font-medium">Contact Number</label><input id="editTContact" type="text" class="w-full p-2 border rounded"></div>
-                            <div><label class="block text-sm font-medium">Availability</label><input id="editTAvail" type="text" class="w-full p-2 border rounded"></div>
-                            <div class="flex gap-2 pt-4">
-                                <button id="saveTeacherProfileBtn" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Save Changes</button>
-                                <button onclick="window.cancelEdit('teacher')" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">Cancel</button>
+                        
+                        <div id="teacherProfileView" class="space-y-4 text-slate-700"></div>
+
+                        <div id="teacherProfileEdit" class="hidden space-y-6">
+                            <div class="p-4 bg-amber-50 rounded-xl text-sm text-amber-800 border border-amber-200 flex items-start gap-3">
+                                <i class="fas fa-info-circle mt-0.5"></i>
+                                <span>Name and Course Code are fixed identifiers and cannot be changed.</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Subject</label>
+                                    <input id="editTSubject" type="text" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Contact Number</label>
+                                    <input id="editTContact" type="text" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Availability</label>
+                                <input id="editTAvail" type="text" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                            </div>
+                            <div class="pt-6 border-t border-slate-100">
+                                <h3 class="font-bold text-slate-800 mb-4">Security</h3>
+                                <input id="editTPass" type="password" placeholder="New Password (leave blank to keep current)" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                            </div>
+                            <div class="flex gap-3">
+                                <button onclick="saveProfile('teacher')" class="bg-indigo-600 text-white px-6 py-2.5 rounded-xl hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all">Save Changes</button>
+                                <button onclick="cancelEdit('teacher')" class="bg-white border border-slate-300 text-slate-700 px-6 py-2.5 rounded-xl hover:bg-slate-50 transition-all">Cancel</button>
                             </div>
                         </div>
                     </div>
 
-                    <div id="t-search" class="tab-content hidden bg-white p-6 rounded-lg shadow">
-                        <h2 class="text-xl font-bold mb-4 border-b pb-2">Search Student</h2>
-                        <div class="flex gap-2 mb-6">
-                            <input id="searchStudentId" type="text" placeholder="Enter Student University ID" class="p-2 border rounded flex-1">
-                            <button onclick="window.searchStudent()" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"><i class="fas fa-search"></i> Search</button>
+                    <div id="t-chat" class="tab-content hidden bg-white rounded-2xl shadow-sm border border-slate-200 h-[650px] flex overflow-hidden">
+                        <div class="w-1/3 border-r border-slate-100 bg-slate-50 flex flex-col">
+                            <div class="p-5 border-b border-slate-200 bg-white">
+                                <h3 class="font-bold text-slate-800">Conversations</h3>
+                            </div>
+                            <div id="tChatContacts" class="flex-1 overflow-y-auto custom-scrollbar"></div>
                         </div>
-                        <div id="student searchResult"></div>
+                        <div class="w-2/3 flex flex-col bg-white">
+                            <div id="tChatHeader" class="p-5 border-b border-slate-100 flex items-center gap-3 shadow-sm z-10">
+                                <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <span class="font-bold text-slate-800">Select a student</span>
+                            </div>
+                            <div id="tChatMessages" class="flex-1 overflow-y-auto p-6 flex flex-col gap-3 bg-slate-50/50 custom-scrollbar">
+                                <div class="h-full flex flex-col items-center justify-center text-slate-400">
+                                    <i class="fas fa-comments text-4xl mb-3 opacity-20"></i>
+                                    <p>Select a conversation to start messaging</p>
+                                </div>
+                            </div>
+                            <div id="tChatInputArea" class="p-4 border-t border-slate-100 bg-white hidden">
+                                <form onsubmit="sendChatMessage(event, 'teacher')" class="flex gap-3">
+                                    <input type="text" id="tMsgInput" placeholder="Type a message..." class="flex-1 bg-slate-100 border-0 p-3.5 rounded-full focus:ring-2 focus:ring-indigo-500 transition-all" autocomplete="off">
+                                    <button type="submit" class="w-12 h-12 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 shadow-md flex items-center justify-center transition-all transform hover:scale-105">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
 
-                    <div id="t-eval" class="tab-content hidden bg-white p-6 rounded-lg shadow">
-                        <h2 class="text-xl font-bold mb-4 border-b pb-2">Evaluate Student</h2>
-                        <div class="space-y-4 max-w-lg">
-                            <input id="evalId" type="text" placeholder="Student University ID" class="w-full p-2 border rounded mt-1">
-                            <input id="evalCourse" type="text" placeholder="Course Name" class="w-full p-2 border rounded mt-1">
-                            <select id="evalStars" class="w-full p-2 border rounded mt-1">
-                                <option value="5">5 Stars</option>
-                                <option value="4">4 Stars</option>
-                                <option value="3">3 Stars</option>
-                                <option value="2">2 Stars</option>
-                                <option value="1">1 Star</option>
-                            </select>
-                            <textarea id="evalComment" placeholder="Comment" class="w-full p-2 border rounded mt-1" rows="3"></textarea>
-                            <button id="submitEvalBtn" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Submit Evaluation</button>
+                    <div id="t-search" class="tab-content hidden bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+                        <h2 class="text-2xl font-bold mb-6 text-slate-800">Search Student</h2>
+                        <div class="flex gap-4 mb-8 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <div class="flex-1 relative">
+                                <i class="fas fa-search absolute left-4 top-3.5 text-slate-400"></i>
+                                <input id="searchStudentId" type="text" placeholder="Enter University ID..." class="w-full p-3 pl-11 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <button onclick="searchStudent()" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 font-medium transition-colors shadow-md shadow-indigo-100">Search</button>
+                        </div>
+                        <div id="studentSearchResult"></div>
+                    </div>
+
+                    <div id="t-eval" class="tab-content hidden bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+                        <h2 class="text-2xl font-bold mb-6 text-slate-800">Evaluate Student</h2>
+                        <div class="space-y-6 max-w-xl">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Student University ID</label>
+                                <input id="evalId" type="text" placeholder="e.g. 242-15-479" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Course Code</label>
+                                <input id="evalCourse" type="text" placeholder="e.g. CSE101" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Rating</label>
+                                <select id="evalStars" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="5">5 Stars - Excellent</option>
+                                    <option value="4">4 Stars - Very Good</option>
+                                    <option value="3">3 Stars - Good</option>
+                                    <option value="2">2 Stars - Fair</option>
+                                    <option value="1">1 Star - Needs Improvement</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Comment</label>
+                                <textarea id="evalComment" rows="4" placeholder="Write your feedback..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                            </div>
+                            <button onclick="submitEvaluation()" class="bg-indigo-600 text-white px-6 py-3 rounded-xl hover:bg-indigo-700 font-bold shadow-lg shadow-indigo-200 transition-all">Submit Evaluation</button>
                         </div>
                     </div>
 
-                    <div id="t-problems" class="tab-content hidden space-y-4">
-                        <div class="bg-white p-4 rounded-lg shadow flex justify-between items-center">
-                            <h2 class="text-xl font-bold">Problem Feed</h2>
-                            <button onclick="window.renderProblems('teacher')" class="text-sm text-indigo-600"><i class="fas fa-sync"></i> Refresh</button>
-                        </div>
+                    <div id="t-problems" class="tab-content hidden bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+                        <h2 class="text-2xl font-bold mb-6 text-slate-800">Student Problems</h2>
                         <div id="teacherProblemList" class="space-y-4"></div>
                     </div>
 
-                    <div id="t-leaderboard" class="tab-content hidden bg-white p-6 rounded-lg shadow"> 
-                        <div class="flex gap-4 mb-4">
-                            <button onclick="window.renderLeaderboard('student')" class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded hover:bg-indigo-200">Student Rankings</button>
-                            <button onclick="window.renderLeaderboard('teacher')" class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded hover:bg-indigo-200">Teacher Rankings</button>
+                    <div id="t-leaderboard" class="tab-content hidden bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold text-slate-800">Leaderboards</h2>
+                            <div class="flex gap-2 bg-slate-100 p-1 rounded-lg">
+                                <button onclick="renderLeaderboard('student')" class="px-4 py-2 rounded-md text-sm font-medium bg-white shadow-sm text-indigo-600">Students</button>
+                                <button onclick="renderLeaderboard('teacher')" class="px-4 py-2 rounded-md text-sm font-medium text-slate-600 hover:bg-white/50">Teachers</button>
+                            </div>
                         </div>
-                        <div id="leaderboardContent" class="overflow-x-auto"></div>
+                        <div id="leaderboardContent"></div>
                     </div>
 
-                    <div id="t-extracare" class="tab-content hidden bg-white p-6 rounded-lg shadow">
-                        <h2 class="text-xl font-bold mb-4 border-b pb-2">Extra Care Management</h2>
-                        <div class="flex gap-2 mb-6">
-                            <input id="extraCareId" type="text" placeholder="Student ID to Add" class="p-2 border rounded flex-1">
-                            <button id="addExtraCareBtn" class="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700">Add to List</button>
+                    <div id="t-extracare" class="tab-content hidden bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+                        <h2 class="text-2xl font-bold mb-6 text-slate-800 flex items-center gap-2">
+                            <i class="fas fa-heart text-pink-500"></i> Extra Care Students
+                        </h2>
+                        <div class="mb-6 bg-pink-50 p-4 rounded-xl border border-pink-100">
+                            <div class="flex gap-3">
+                                <input id="extraCareId" type="text" placeholder="Enter Student University ID..." class="flex-1 p-3 bg-white border border-pink-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                <button onclick="addToExtraCare()" class="bg-pink-600 text-white px-6 py-3 rounded-lg hover:bg-pink-700 font-medium transition-colors shadow-md">Add Student</button>
+                            </div>
                         </div>
-                        <h3 class="font-bold mb-2 text-gray-600">Current List:</h3>
-                        <div id="extraCareList" class="space-y-2"></div>
+                        <div id="extraCareList" class="space-y-3"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div id="view-student-dash" class="hidden container mx-auto fade-in"> 
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div class="md:col-span-1 bg-white p-4 rounded-lg shadow h-fit">
-                    <div class="text-center mb-6">
-                        <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto text-green-600 text-2xl font-bold mb-2">
-                            <i class="fas fa-user-graduate"></i>
+        <div id="view-student-dash" class="hidden container mx-auto fade-in">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+                <div class="md:col-span-3 lg:col-span-3">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 sticky top-24">
+                        <div class="text-center mb-8">
+                            <div class="w-24 h-24 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-full flex items-center justify-center mx-auto text-emerald-600 text-3xl font-bold mb-4 shadow-inner">
+                                <span id="studentInitialsDisplay">S</span>
+                            </div>
+                            <h3 id="studentNameDisplay" class="font-bold text-xl text-slate-800">Student Name</h3>
+                            <p id="studentIdDisplay" class="text-sm font-medium text-emerald-600 bg-emerald-50 inline-block px-3 py-1 rounded-full mt-2">ID</p>
                         </div>
-                        <h3 id="studentNameDisplay" class="font-bold text-lg">Student Name</h3>
-                        <p id="studentIdDisplay" class="text-sm text-gray-500">ID</p>
+                        <nav class="space-y-1">
+                            <button onclick="switchTab('s-profile')" class="nav-item w-full text-left p-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-all font-medium flex items-center active" data-tab="s-profile">
+                                <i class="fas fa-user w-6 text-center mr-3"></i> Profile
+                            </button>
+                            <button onclick="switchTab('s-chat')" class="nav-item w-full text-left p-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-all font-medium flex items-center" data-tab="s-chat">
+                                <i class="fas fa-comments w-6 text-center mr-3"></i> Messages
+                            </button>
+                            <button onclick="switchTab('s-peers')" class="nav-item w-full text-left p-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-all font-medium flex items-center" data-tab="s-peers">
+                                <i class="fas fa-users w-6 text-center mr-3"></i> Find Peers
+                            </button>
+                            <button onclick="switchTab('s-teachers')" class="nav-item w-full text-left p-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-all font-medium flex items-center" data-tab="s-teachers">
+                                <i class="fas fa-chalkboard-teacher w-6 text-center mr-3"></i> Find Teachers
+                            </button>
+                            <button onclick="switchTab('s-problems')" class="nav-item w-full text-left p-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-all font-medium flex items-center" data-tab="s-problems">
+                                <i class="fas fa-question-circle w-6 text-center mr-3"></i> Problems
+                            </button>
+                            <button onclick="switchTab('s-submit')" class="nav-item w-full text-left p-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-all font-medium flex items-center" data-tab="s-submit">
+                                <i class="fas fa-plus-circle w-6 text-center mr-3"></i> Submit Problem
+                            </button>
+                            <button onclick="switchTab('s-leaderboard')" class="nav-item w-full text-left p-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-all font-medium flex items-center" data-tab="s-leaderboard">
+                                <i class="fas fa-trophy w-6 text-center mr-3"></i> Batch Rank
+                            </button>
+                        </nav>
                     </div>
-                    <nav class="space-y-2">
-                        <button onclick="window.switchTab('s-profile')" class="w-full text-left p-2 hover:bg-green-50 rounded s-tab active-tab" data-tab="s-profile"><i class="fas fa-user mr-2"></i> Profile</button>
-                        <button onclick="window.switchTab('s-search')" class="w-full text-left p-2 hover:bg-green-50 rounded s-tab" data-tab="s-search"><i class="fas fa-search mr-2"></i> Search Teacher</button>
-                        <button onclick="window.switchTab('s-search-student')" class="w-full text-left p-2 hover:bg-green-50 rounded s-tab" data-tab="s-search-student"><i class="fas fa-user-friends mr-2"></i> Search Student</button>
-                        <button onclick="window.switchTab('s-submit')" class="w-full text-left p-2 hover:bg-green-50 rounded s-tab" data-tab="s-submit"><i class="fas fa-pen mr-2"></i> Submit Problem</button>
-                        <button onclick="window.switchTab('s-problems')" class="w-full text-left p-2 hover:bg-green-50 rounded s-tab" data-tab="s-problems"><i class="fas fa-list mr-2"></i> View Problems</button>
-                        <button onclick="window.switchTab('s-leaderboard')" class="w-full text-left p-2 hover:bg-green-50 rounded s-tab" data-tab="s-leaderboard"><i class="fas fa-trophy mr-2"></i> Batch Leaderboard</button>
-                    </nav>
                 </div>
 
-                <div class="md:col-span-3">
-                    <div id="s-profile" class="tab-content bg-white p-6 rounded-lg shadow"> 
-                        <div class="flex justify-between items-center mb-4 border-b pb-2">
-                            <h2 class="text-xl font-bold">My Profile</h2>
-                            <button onclick="window.enableEditMode('student')" class="text-sm bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded"><i class="fas fa-edit"></i> Edit</button>
+                <div class="md:col-span-9 lg:col-span-9">
+                    <div id="s-profile" class="tab-content bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+                        <div class="flex justify-between items-center mb-8 pb-4 border-b border-slate-100">
+                            <h2 class="text-2xl font-bold text-slate-800">My Profile</h2>
+                            <button onclick="enableEditMode('student')" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm">
+                                <i class="fas fa-edit mr-2"></i> Edit Profile
+                            </button>
                         </div>
-                        <div id="studentProfileView" class="space-y-2 text-gray-700"></div>
-                        <div id="studentProfileEdit" class="hidden space-y-4">
-                            <div class="p-4 bg-yellow-50 rounded text-sm text-yellow-700 mb-2">Note: Name, ID, and Batch cannot be changed.</div>
-                            <div><label class="block text-sm font-medium">Contact Number</label><input id="editSContact" type="text" class="w-full p-2 border rounded"></div>
-                            <div><label class="block text-sm font-medium">Skills</label><input id="editSSkills" type="text" class="w-full p-2 border rounded"></div>
-                            <div><label class="block text-sm font-medium">Links</label><input id="editSLinks" type="text" class="w-full p-2 border rounded"></div>
-                            <div class="flex gap-2 pt-4">
-                                <button id="saveStudentProfileBtn" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Save Changes</button>
-                                <button onclick="window.cancelEdit('student')" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">Cancel</button>
+                        
+                        <div id="studentProfileView" class="space-y-4 text-slate-700"></div>
+
+                        <div id="studentProfileEdit" class="hidden space-y-6">
+                            <div class="p-4 bg-amber-50 rounded-xl text-sm text-amber-800 border border-amber-200 flex items-start gap-3">
+                                <i class="fas fa-info-circle mt-0.5"></i>
+                                <span>Name and University ID are fixed identifiers and cannot be changed.</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Contact Number</label>
+                                    <input id="editSNo" type="text" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Batch No</label>
+                                    <input id="editSBatch" type="text" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">CGPAs (comma separated)</label>
+                                <input id="editSCgpa" type="text" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Skills (comma separated)</label>
+                                <input id="editSSkills" type="text" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Portfolio Links (comma separated)</label>
+                                <input id="editSLinks" type="text" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                            </div>
+                            <div class="pt-6 border-t border-slate-100">
+                                <h3 class="font-bold text-slate-800 mb-4">Security</h3>
+                                <input id="editSPass" type="password" placeholder="New Password (leave blank to keep current)" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                            </div>
+                            <div class="flex gap-3">
+                                <button onclick="saveProfile('student')" class="bg-indigo-600 text-white px-6 py-2.5 rounded-xl hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all">Save Changes</button>
+                                <button onclick="cancelEdit('student')" class="bg-white border border-slate-300 text-slate-700 px-6 py-2.5 rounded-xl hover:bg-slate-50 transition-all">Cancel</button>
                             </div>
                         </div>
-                        <h3 class="font-bold mt-6 mb-2 border-b pb-1">Evaluations</h3>
-                        <div id="studentEvaluationsList" class="space-y-3"></div>
                     </div>
 
-                    <div id="s-search" class="tab-content hidden bg-white p-6 rounded-lg shadow">
-                        <h2 class="text-xl font-bold mb-4 border-b pb-2">Search Teacher</h2>
-                        <div class="flex gap-2 mb-6">
-                            <input id="searchTeacherName" type="text" placeholder="Enter Teacher Name" class="p-2 border rounded flex-1">
-                            <button onclick="window.searchTeacher()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"><i class="fas fa-search"></i> Search</button>
+                    <div id="s-chat" class="tab-content hidden bg-white rounded-2xl shadow-sm border border-slate-200 h-[650px] flex overflow-hidden">
+                        <div class="w-1/3 border-r border-slate-100 bg-slate-50 flex flex-col">
+                            <div class="p-5 border-b border-slate-200 bg-white">
+                                <h3 class="font-bold text-slate-800">Conversations</h3>
+                            </div>
+                            <div id="sChatContacts" class="flex-1 overflow-y-auto custom-scrollbar"></div>
                         </div>
-                        <div id="teacherSearchResult"></div>
+                        <div class="w-2/3 flex flex-col bg-white">
+                            <div id="sChatHeader" class="p-5 border-b border-slate-100 flex items-center gap-3 shadow-sm z-10">
+                                <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <span class="font-bold text-slate-800">Select a contact</span>
+                            </div>
+                            <div id="sChatMessages" class="flex-1 overflow-y-auto p-6 flex flex-col gap-3 bg-slate-50/50 custom-scrollbar">
+                                <div class="h-full flex flex-col items-center justify-center text-slate-400">
+                                    <i class="fas fa-comments text-4xl mb-3 opacity-20"></i>
+                                    <p>Select a conversation to start messaging</p>
+                                </div>
+                            </div>
+                            <div id="sChatInputArea" class="p-4 border-t border-slate-100 bg-white hidden">
+                                <form onsubmit="sendChatMessage(event, 'student')" class="flex gap-3">
+                                    <input type="text" id="sMsgInput" placeholder="Type a message..." class="flex-1 bg-slate-100 border-0 p-3.5 rounded-full focus:ring-2 focus:ring-indigo-500 transition-all" autocomplete="off">
+                                    <button type="submit" class="w-12 h-12 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 shadow-md flex items-center justify-center transition-all transform hover:scale-105">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
 
-                    <div id="s-search-student" class="tab-content hidden bg-white p-6 rounded-lg shadow">
-                        <h2 class="text-xl font-bold mb-4 border-b pb-2">Search Student</h2>
-                        <div class="flex gap-2 mb-6">
-                            <input id="searchPeerId" type="text" placeholder="Enter Student University ID" class="p-2 border rounded flex-1">
-                            <button onclick="window.searchPeer()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"><i class="fas fa-search"></i> Search</button>
+                    <div id="s-peers" class="tab-content hidden bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+                        <h2 class="text-2xl font-bold mb-6 text-slate-800">Find Peers</h2>
+                        <div class="flex gap-4 mb-8 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <div class="flex-1 relative">
+                                <i class="fas fa-search absolute left-4 top-3.5 text-slate-400"></i>
+                                <input id="searchPeerId" type="text" placeholder="Enter University ID..." class="w-full p-3 pl-11 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <button onclick="searchPeer()" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 font-medium transition-colors shadow-md shadow-indigo-100">Search</button>
                         </div>
                         <div id="peerSearchResult"></div>
                     </div>
 
-                    <div id="s-submit" class="tab-content hidden bg-white p-6 rounded-lg shadow"> 
-                        <h2 class="text-xl font-bold mb-4 border-b pb-2">Submit New Problem</h2>
-                        <div class="space-y-4">
-                            <input id="probCourse" type="text" placeholder="Course Name" class="w-full p-2 border rounded">
-                            <textarea id="probDesc" placeholder="Describe your problem in detail..." class="w-full p-2 border rounded" rows="4"></textarea>
-                            <button id="submitProbBtn" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Post Problem</button>
+                    <div id="s-teachers" class="tab-content hidden bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+                        <h2 class="text-2xl font-bold mb-6 text-slate-800">Find Teachers</h2>
+                        <div class="flex gap-4 mb-8 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <div class="flex-1 relative">
+                                <i class="fas fa-search absolute left-4 top-3.5 text-slate-400"></i>
+                                <input id="searchTeacherName" type="text" placeholder="Enter Teacher Name..." class="w-full p-3 pl-11 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <button onclick="searchTeacher()" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 font-medium transition-colors shadow-md shadow-indigo-100">Search</button>
                         </div>
+                        <div id="teacherSearchResult"></div>
                     </div>
 
-                    <div id="s-problems" class="tab-content hidden space-y-4">
-                        <div class="bg-white p-4 rounded-lg shadow flex justify-between items-center">
-                            <h2 class="text-xl font-bold">Global Problems</h2>
-                            <button onclick="window.renderProblems('student')" class="text-sm text-green-600"><i class="fas fa-sync"></i> Refresh</button>
-                        </div>
+                    <div id="s-problems" class="tab-content hidden bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+                        <h2 class="text-2xl font-bold mb-6 text-slate-800">Community Problems</h2>
                         <div id="studentProblemList" class="space-y-4"></div>
                     </div>
 
-                    <div id="s-leaderboard" class="tab-content hidden bg-white p-6 rounded-lg shadow">
-                        <h2 class="text-xl font-bold mb-4 border-b pb-2">My Batch Leaderboard</h2>
+                    <div id="s-submit" class="tab-content hidden bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+                        <h2 class="text-2xl font-bold mb-6 text-slate-800">Submit a Problem</h2>
+                        <div class="space-y-6 max-w-xl">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Course Code</label>
+                                <input id="probCourse" type="text" placeholder="e.g. CSE101" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Problem Description</label>
+                                <textarea id="probDesc" rows="5" placeholder="Describe your problem in detail..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                            </div>
+                            <button onclick="submitProblem()" class="bg-indigo-600 text-white px-6 py-3 rounded-xl hover:bg-indigo-700 font-bold shadow-lg shadow-indigo-200 transition-all">Post Problem</button>
+                        </div>
+                    </div>
+
+                    <div id="s-leaderboard" class="tab-content hidden bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+                        <h2 class="text-2xl font-bold mb-6 text-slate-800">Batch Leaderboard</h2>
                         <div id="studentBatchLeaderboard"></div>
                     </div>
                 </div>
             </div>
         </div>
-
     </main>
 
-    <div id="toast" class="fixed bottom-4 right-4 bg-gray-800 text-white px-6 py-3 rounded shadow-lg transform translate-y-20 transition-transform duration-300 z-50">
-        Notification
+    <div id="toast" class="fixed bottom-6 right-6 bg-slate-800 text-white px-6 py-4 rounded-xl shadow-2xl hidden transition-all transform translate-y-10 opacity-0 z-50 flex items-center gap-3">
+        <i id="toastIcon" class="fas fa-check-circle text-green-400"></i>
+        <span id="toastMsg">Message</span>
     </div>
 
-    <script type="module">
-        // --- 1. FIREBASE SETUP ---
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
-
-        // !!! PASTE YOUR FIREBASE CONFIG HERE (See Instructions) !!!
-        // Replace the object below with the one you copied from Firebase Console
-        const firebaseConfig = {
-             apiKey: "AIzaSyAWY7_PF2ebIKX7jO9YGxzFeUu3MrvOw1Q",
-    authDomain: "student-evaluation-5859f.firebaseapp.com",
-    projectId: "student-evaluation-5859f",
-    storageBucket: "student-evaluation-5859f.firebasestorage.app",
-    messagingSenderId: "1070612693344",
-    appId: "1:1070612693344:web:0c2e1f170b45c3a3fede05"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        // --- 2. STATE MANAGEMENT ---
-        let DB = {
-            teachers: [],
-            students: [],
-            problems: [],
-            extraCare: []
-        };
-        
-        let currentUser = null;
-        let currentUserType = null;
-
-        // --- 3. DATA FETCHING ---
-        async function loadAllData() {
-            try {
-                // Fetch Teachers
-                const tSnap = await getDocs(collection(db, "teachers"));
-                DB.teachers = tSnap.docs.map(d => ({ ...d.data(), docId: d.id }));
-
-                // Fetch Students
-                const sSnap = await getDocs(collection(db, "students"));
-                DB.students = sSnap.docs.map(d => ({ ...d.data(), docId: d.id }));
-
-                // Fetch Problems
-                const pSnap = await getDocs(collection(db, "problems"));
-                DB.problems = pSnap.docs.map(d => ({ ...d.data(), docId: d.id }));
-
-                // Fetch Extra Care
-                // (For simplicity in this version, we just store the ID strings in a simple object in Firestore, 
-                // or we filter students who are marked as 'extra care'. 
-                // Here we will fetch a collection 'extracare' that contains student IDs)
-                const eSnap = await getDocs(collection(db, "extracare"));
-                DB.extraCare = eSnap.docs.map(d => d.data());
-
-                console.log("Data Loaded", DB);
-                document.getElementById('loadingOverlay').classList.add('hidden');
-            } catch (e) {
-                console.error(e);
-                alert("Error connecting to database. Did you paste your Config keys?");
-            }
-        }
-
-        // Start Loading
-        loadAllData();
-
-        // --- 4. GLOBAL UTILS ---
-        window.showView = (viewId) => {
-            document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('hidden'));
-            document.getElementById(viewId).classList.remove('hidden');
-        };
-
-        window.showToast = (msg) => {
-            const t = document.getElementById('toast');
-            t.innerText = msg;
-            t.classList.remove('translate-y-20');
-            setTimeout(() => t.classList.add('translate-y-20'), 3000);
-        };
-
-        window.switchTab = (tabId) => {
-            const prefix = currentUserType === 'teacher' ? 't' : 's';
-            document.querySelectorAll(`.${prefix}-tab`).forEach(el => {
-                el.classList.remove('bg-indigo-100', 'bg-green-100', 'text-indigo-700', 'text-green-700', 'font-bold');
-                el.classList.add('hover:bg-gray-50');
-            });
-            const activeBtn = document.querySelector(`button[data-tab="${tabId}"]`);
-            if(currentUserType === 'teacher') {
-                activeBtn.classList.add('bg-indigo-100', 'text-indigo-700', 'font-bold');
-            } else {
-                activeBtn.classList.add('bg-green-100', 'text-green-700', 'font-bold');
-            }
-            const parent = currentUserType === 'teacher' ? document.getElementById('view-teacher-dash') : document.getElementById('view-student-dash');
-            parent.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.getElementById(tabId).classList.remove('hidden');
-
-            if(tabId.includes('problems')) window.renderProblems(currentUserType);
-            if(tabId === 't-extracare') window.renderExtraCareList();
-            if(tabId === 't-leaderboard') window.renderLeaderboard('student');
-            if(tabId === 's-leaderboard') window.renderBatchLeaderboard();
-            if(tabId.includes('profile')) window.renderProfile();
-        };
-
-        // --- 5. AUTHENTICATION ---
-        document.getElementById('loginBtn').addEventListener('click', async () => {
-            const name = document.getElementById('loginName').value;
-            const pass = document.getElementById('loginPass').value;
-            
-            // Refresh data before login to ensure we have latest users
-            document.getElementById('loadingOverlay').classList.remove('hidden');
-            await loadAllData(); 
-            
-            const teacher = DB.teachers.find(t => t.name === name && t.password === pass);
-            if (teacher) {
-                initSession(teacher, 'teacher');
-                return;
-            }
-            const student = DB.students.find(s => s.name === name && s.password === pass);
-            if (student) {
-                initSession(student, 'student');
-                return;
-            }
-            document.getElementById('loadingOverlay').classList.add('hidden');
-            window.showToast('Invalid credentials');
-        });
-
-        function initSession(user, type) {
-            currentUser = user;
-            currentUserType = type;
-            document.getElementById('userInfo').classList.remove('hidden');
-            document.getElementById('welcomeText').innerText = `Hello, ${user.name}`;
-            
-            if (type === 'teacher') {
-                document.getElementById('teacherNameDisplay').innerText = user.name;
-                document.getElementById('teacherInitialsDisplay').innerText = user.initials;
-                document.getElementById('teacherCodeDisplay').innerText = user.courseCode;
-                window.showView('view-teacher-dash');
-                window.switchTab('t-profile');
-            } else {
-                document.getElementById('studentNameDisplay').innerText = user.name;
-                document.getElementById('studentIdDisplay').innerText = user.universityID;
-                window.showView('view-student-dash');
-                window.switchTab('s-profile');
-            }
-            document.getElementById('loadingOverlay').classList.add('hidden');
-        }
-
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            currentUser = null;
-            currentUserType = null;
-            document.getElementById('userInfo').classList.add('hidden');
-            window.showView('view-login');
-        });
-
-        // --- 6. SIGNUP ACTIONS (WRITE TO FIREBASE) ---
-        document.getElementById('signupTeacherBtn').addEventListener('click', async () => {
-            const name = document.getElementById('tName').value;
-            const pass = document.getElementById('tPass').value;
-            const subj = document.getElementById('tSubj').value;
-            const code = document.getElementById('tCode').value;
-            const contact = document.getElementById('tContact').value;
-            const avail = document.getElementById('tAvail').value;
-
-            if(!name || !pass) return window.showToast('Name and Password required');
-            
-            const initials = name.trim().split(/\s+/).map(p => p[0]).join('').toUpperCase();
-            const newTeacher = { 
-                name, password: pass, subject: subj, courseCode: code.toUpperCase(), 
-                contactNumber: contact, availability: avail, initials, problemsSolved: 0 
-            };
-
-            try {
-                await addDoc(collection(db, "teachers"), newTeacher);
-                window.showToast('Teacher registered! Please login.');
-                window.showView('view-login');
-            } catch(e) { console.error(e); window.showToast('Error registering'); }
-        });
-
-        document.getElementById('signupStudentBtn').addEventListener('click', async () => {
-            const name = document.getElementById('sName').value;
-            const pass = document.getElementById('sPass').value;
-            const id = document.getElementById('sId').value;
-            const no = document.getElementById('sNo').value;
-            const batch = document.getElementById('sBatch').value;
-            const cgpaStr = document.getElementById('sCgpa').value;
-            const skillsStr = document.getElementById('sSkills').value;
-            const linksStr = document.getElementById('sLinks').value;
-
-            if(!name || !pass || !id) return window.showToast('Required fields missing');
-
-            const newStudent = {
-                name, password: pass, universityID: id, studentNo: no, batchNo: batch,
-                cgpas: cgpaStr ? cgpaStr.split(',').map(n => parseFloat(n.trim())) : [],
-                skills: skillsStr ? skillsStr.split(',').map(s => s.trim()) : [],
-                links: linksStr ? linksStr.split(',').map(s => s.trim()) : [],
-                submittedProblems: 0, problemsSolved: 0,
-                evaluations: {} 
-            };
-
-            try {
-                await addDoc(collection(db, "students"), newStudent);
-                window.showToast('Student registered! Please login.');
-                window.showView('view-login');
-            } catch(e) { console.error(e); window.showToast('Error registering'); }
-        });
-
-        // --- 7. PROFILE EDITING ---
-        window.enableEditMode = (type) => {
-            if(type === 'teacher') {
-                document.getElementById('teacherProfileView').classList.add('hidden');
-                document.getElementById('teacherProfileEdit').classList.remove('hidden');
-                document.getElementById('editTSubject').value = currentUser.subject;
-                document.getElementById('editTContact').value = currentUser.contactNumber;
-                document.getElementById('editTAvail').value = currentUser.availability;
-            } else {
-                document.getElementById('studentProfileView').classList.add('hidden');
-                document.getElementById('studentProfileEdit').classList.remove('hidden');
-                document.getElementById('editSContact').value = currentUser.studentNo;
-                document.getElementById('editSSkills').value = currentUser.skills.join(', ');
-                document.getElementById('editSLinks').value = currentUser.links.join(', ');
-            }
-        };
-
-        window.cancelEdit = (type) => {
-            document.getElementById(type === 'teacher' ? 'teacherProfileView' : 'studentProfileView').classList.remove('hidden');
-            document.getElementById(type === 'teacher' ? 'teacherProfileEdit' : 'studentProfileEdit').classList.add('hidden');
-        };
-
-        document.getElementById('saveTeacherProfileBtn').addEventListener('click', async () => {
-            const updates = {
-                subject: document.getElementById('editTSubject').value,
-                contactNumber: document.getElementById('editTContact').value,
-                availability: document.getElementById('editTAvail').value
-            };
-            try {
-                await updateDoc(doc(db, "teachers", currentUser.docId), updates);
-                Object.assign(currentUser, updates); // Update local
-                window.showToast('Profile Updated');
-                window.cancelEdit('teacher');
-                window.renderProfile();
-            } catch(e) { window.showToast('Update failed'); }
-        });
-
-        document.getElementById('saveStudentProfileBtn').addEventListener('click', async () => {
-            const updates = {
-                studentNo: document.getElementById('editSContact').value,
-                skills: document.getElementById('editSSkills').value.split(',').map(s => s.trim()).filter(s => s),
-                links: document.getElementById('editSLinks').value.split(',').map(s => s.trim()).filter(s => s)
-            };
-            try {
-                await updateDoc(doc(db, "students", currentUser.docId), updates);
-                Object.assign(currentUser, updates); // Update local
-                window.showToast('Profile Updated');
-                window.cancelEdit('student');
-                window.renderProfile();
-            } catch(e) { window.showToast('Update failed'); }
-        });
-
-        // --- 8. PROBLEMS & LOGIC ---
-        document.getElementById('submitProbBtn').addEventListener('click', async () => {
-            const course = document.getElementById('probCourse').value;
-            const desc = document.getElementById('probDesc').value;
-            if(!course || !desc) return window.showToast('All fields required');
-
-            const newProb = {
-                submitterName: currentUser.name, course, description: desc,
-                solved: false, solution: "", proposedSolution: null, solverName: null,
-                timestamp: Date.now()
-            };
-
-            try {
-                await addDoc(collection(db, "problems"), newProb);
-                // Update user stat
-                const newCount = (currentUser.submittedProblems || 0) + 1;
-                await updateDoc(doc(db, "students", currentUser.docId), { submittedProblems: newCount });
-                currentUser.submittedProblems = newCount;
-
-                window.showToast('Problem Submitted');
-                document.getElementById('probCourse').value = '';
-                document.getElementById('probDesc').value = '';
-                // Reload problems
-                loadAllData().then(() => window.switchTab('s-problems'));
-            } catch(e) { window.showToast('Error submitting'); }
-        });
-
-        window.proposeSolution = async (docId) => {
-            const input = document.getElementById(`sol-${docId}`);
-            if(!input.value.trim()) return window.showToast('Empty solution');
-            try {
-                await updateDoc(doc(db, "problems", docId), {
-                    proposedSolution: input.value,
-                    solverName: currentUser.name
-                });
-                window.showToast('Solution Proposed');
-                loadAllData().then(() => window.renderProblems(currentUserType));
-            } catch(e) { console.error(e); window.showToast('Error'); }
-        };
-
-        window.confirmSolution = async (docId, solverName) => {
-            try {
-                // 1. Update Problem
-                await updateDoc(doc(db, "problems", docId), { solved: true, solution: "See proposed" }); // Simplified
-                
-                // 2. Credit Solver (Find them first)
-                // This is tricky because we need the solver's docId. 
-                // Ideally we store solverUid in the problem. For now, we search.
-                const solverS = DB.students.find(s => s.name === solverName);
-                const solverT = DB.teachers.find(t => t.name === solverName);
-                
-                if(solverS) {
-                    await updateDoc(doc(db, "students", solverS.docId), { problemsSolved: (solverS.problemsSolved||0) + 1 });
-                } else if(solverT) {
-                    await updateDoc(doc(db, "teachers", solverT.docId), { problemsSolved: (solverT.problemsSolved||0) + 1 });
-                }
-
-                window.showToast('Confirmed & Points Added');
-                loadAllData().then(() => window.renderProblems(currentUserType));
-            } catch(e) { console.error(e); window.showToast('Error'); }
-        };
-
-        window.rejectSolution = async (docId) => {
-            try {
-                await updateDoc(doc(db, "problems", docId), { proposedSolution: null, solverName: null });
-                window.showToast('Rejected');
-                loadAllData().then(() => window.renderProblems(currentUserType));
-            } catch(e) { window.showToast('Error'); }
-        };
-
-        // --- 9. RENDER FUNCTIONS (Read from DB state) ---
-        window.renderProblems = (viewerType) => {
-            const container = viewerType === 'teacher' ? document.getElementById('teacherProblemList') : document.getElementById('studentProblemList');
-            container.innerHTML = '';
-            if (DB.problems.length === 0) return container.innerHTML = '<p class="text-center text-gray-400">No problems.</p>';
-
-            // Sort by newest
-            const sorted = [...DB.problems].sort((a,b) => b.timestamp - a.timestamp);
-
-            sorted.forEach(p => {
-                let statusBadge = p.solved ? `<span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Solved by ${p.solverName}</span>`
-                    : (p.proposedSolution ? `<span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">Solution Pending</span>`
-                    : `<span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">Open</span>`);
-
-                const isMyProblem = p.submitterName === currentUser.name;
-                let actions = '';
-
-                if (isMyProblem && p.proposedSolution && !p.solved) {
-                    actions = `
-                        <div class="mt-3 bg-blue-50 p-3 rounded border border-blue-100">
-                            <p class="text-sm font-bold text-blue-800">Proposed by ${p.solverName}:</p>
-                            <p class="text-sm text-gray-700 italic my-1">"${p.proposedSolution}"</p>
-                            <div class="flex gap-2 mt-2">
-                                <button onclick="window.confirmSolution('${p.docId}', '${p.solverName}')" class="bg-blue-600 text-white text-xs px-3 py-1 rounded">Accept</button>
-                                <button onclick="window.rejectSolution('${p.docId}')" class="bg-red-500 text-white text-xs px-3 py-1 rounded">Reject</button>
-                            </div>
-                        </div>`;
-                } else if (!isMyProblem && !p.solved) {
-                    actions = `
-                        <div class="mt-3 flex gap-2">
-                            <input type="text" id="sol-${p.docId}" placeholder="Propose solution..." class="flex-1 border p-1 rounded text-sm">
-                            <button onclick="window.proposeSolution('${p.docId}')" class="bg-indigo-600 text-white text-xs px-3 py-1 rounded">Send</button>
-                        </div>`;
-                } else if (p.solved) {
-                    actions = `<div class="mt-3 bg-green-50 p-2 rounded"><p class="text-sm text-gray-800">Answer: ${p.proposedSolution || p.solution}</p></div>`;
-                }
-
-                container.innerHTML += `
-                    <div class="card bg-white p-5 rounded-lg shadow border-l-4 ${p.solved ? 'border-green-500' : 'border-gray-300'}">
-                        <div class="flex justify-between items-start">
-                            <div><span class="bg-indigo-100 text-indigo-800 text-xs font-bold px-2 py-0.5 rounded uppercase">${p.course}</span>
-                            <h3 class="text-md font-semibold mt-1">${p.description}</h3>
-                            <p class="text-xs text-gray-500 mt-1">By ${p.submitterName}</p></div>
-                            ${statusBadge}
-                        </div>
-                        ${actions}
-                    </div>`;
-            });
-        };
-
-        window.renderProfile = () => {
-            const isTeacher = currentUserType === 'teacher';
-            const container = isTeacher ? document.getElementById('teacherProfileView') : document.getElementById('studentProfileView');
-            
-            if (isTeacher) {
-                container.innerHTML = `
-                    <p><strong>Subject:</strong> ${currentUser.subject}</p>
-                    <p><strong>Course Code:</strong> ${currentUser.courseCode}</p>
-                    <p><strong>Contact:</strong> ${currentUser.contactNumber}</p>
-                    <p><strong>Availability:</strong> ${currentUser.availability}</p>
-                    <p><strong>Problems Solved:</strong> ${currentUser.problemsSolved}</p>
-                `;
-            } else {
-                let totalStars = 0, count = 0;
-                const evals = currentUser.evaluations || {};
-                for (const key in evals) { evals[key].forEach(e => { totalStars += e.stars; count++; }); }
-                const average = count > 0 ? (totalStars / count).toFixed(1) : 'N/A';
-
-                container.innerHTML = `
-                    <div class="flex justify-between items-start">
-                        <div><p><strong>ID:</strong> ${currentUser.universityID}</p><p><strong>Batch:</strong> ${currentUser.batchNo}</p><p><strong>Contact:</strong> ${currentUser.studentNo}</p></div>
-                        <div class="text-center bg-yellow-50 p-2 rounded border border-yellow-200"><span class="block text-xl font-bold text-yellow-600">${average} ★</span><span class="text-xs text-gray-500">Avg Rating</span></div>
-                    </div>
-                    <div class="mt-2 space-y-1">
-                        <p><strong>Skills:</strong> ${currentUser.skills.join(', ')}</p>
-                        <p><strong>Links:</strong> ${currentUser.links.join(', ')}</p>
-                        <p class="mt-2 text-indigo-600 font-bold">Submitted: ${currentUser.submittedProblems} | Solved: ${currentUser.problemsSolved}</p>
-                    </div>
-                `;
-                // Evals
-                const evalContainer = document.getElementById('studentEvaluationsList');
-                evalContainer.innerHTML = '';
-                if(Object.keys(evals).length === 0) evalContainer.innerHTML = '<p class="text-gray-400 italic">No evaluations.</p>';
-                for(let course in evals) {
-                    evals[course].forEach(e => {
-                        evalContainer.innerHTML += `<div class="bg-yellow-50 p-3 rounded border border-yellow-200 text-sm mb-2"><div class="flex justify-between font-bold text-yellow-800"><span>${course}</span><span>${e.stars} ★</span></div><p class="mt-1 text-gray-700">"${e.comment}"</p><p class="text-xs text-right text-gray-500 mt-1">- ${e.teacherName}</p></div>`;
-                    });
-                }
-            }
-        };
-
-        // --- 10. SEARCH & MISC ---
-        window.searchStudent = () => {
-            const id = document.getElementById('searchStudentId').value.trim();
-            const container = document.getElementById('student searchResult');
-            const s = DB.students.find(st => st.universityID === id);
-            if(!s) return container.innerHTML = '<p class="text-gray-500 mt-2">Not found.</p>';
-            
-            // Simple Render
-            container.innerHTML = `<div class="mt-4 border p-4 rounded bg-gray-50"><h3 class="font-bold">${s.name}</h3><p>ID: ${s.universityID}</p><p>Skills: ${s.skills.join(', ')}</p></div>`;
-        };
-
-        window.searchPeer = () => {
-            const id = document.getElementById('searchPeerId').value.trim();
-            const container = document.getElementById('peerSearchResult');
-            const s = DB.students.find(st => st.universityID === id);
-            if(!s) return container.innerHTML = '<p class="text-gray-500 mt-2">Not found.</p>';
-            container.innerHTML = `<div class="mt-4 border p-4 rounded bg-gray-50"><h3 class="font-bold">${s.name}</h3><p>Skills: ${s.skills.join(', ')}</p><p>Links: ${s.links.join(', ')}</p></div>`;
-        };
-
-        window.searchTeacher = () => {
-            const name = document.getElementById('searchTeacherName').value.trim().toLowerCase();
-            const container = document.getElementById('teacherSearchResult');
-            const results = DB.teachers.filter(t => t.name.toLowerCase().includes(name));
-            if(!results.length) return container.innerHTML = '<p class="text-gray-500">No match.</p>';
-            container.innerHTML = results.map(t => `<div class="border p-4 rounded bg-gray-50 mb-2"><h3 class="font-bold">${t.name}</h3><p>${t.courseCode}</p><p>${t.contactNumber}</p></div>`).join('');
-        };
-
-        document.getElementById('submitEvalBtn').addEventListener('click', async () => {
-            const id = document.getElementById('evalId').value;
-            const course = document.getElementById('evalCourse').value;
-            const stars = parseInt(document.getElementById('evalStars').value);
-            const comment = document.getElementById('evalComment').value;
-            
-            const student = DB.students.find(s => s.universityID === id);
-            if (!student) return window.showToast('Student not found');
-
-            const evals = student.evaluations || {};
-            if (!evals[course]) evals[course] = [];
-            evals[course].push({ stars, comment, teacherName: currentUser.name });
-
-            try {
-                await updateDoc(doc(db, "students", student.docId), { evaluations: evals });
-                window.showToast('Evaluation Submitted');
-                // Reset inputs
-                document.getElementById('evalId').value = '';
-                document.getElementById('evalComment').value = '';
-            } catch(e) { window.showToast('Error'); }
-        });
-
-        window.renderLeaderboard = (type) => {
-            const container = document.getElementById('leaderboardContent');
-            const list = type === 'student' ? DB.students : DB.teachers;
-            list.sort((a,b) => (b.problemsSolved||0) - (a.problemsSolved||0));
-            container.innerHTML = `<table class="w-full text-sm"><thead><tr class="bg-gray-100"><th class="p-2 text-left">Rank</th><th class="p-2 text-left">Name</th><th class="p-2 text-left">Solved</th></tr></thead><tbody>` + 
-                list.map((u, i) => `<tr class="border-b"><td class="p-2">#${i+1}</td><td class="p-2">${u.name}</td><td class="p-2 font-bold">${u.problemsSolved||0}</td></tr>`).join('') + `</tbody></table>`;
-        };
-
-        window.renderBatchLeaderboard = () => {
-            const container = document.getElementById('studentBatchLeaderboard');
-            const batch = currentUser.batchNo;
-            const list = DB.students.filter(s => s.batchNo === batch).sort((a,b) => (b.problemsSolved||0) - (a.problemsSolved||0));
-            container.innerHTML = `<p class="mb-2 text-sm text-gray-500">Batch: ${batch}</p><table class="w-full text-left"><thead><tr class="bg-green-50"><th class="p-2">Rank</th><th class="p-2">Name</th><th class="p-2">Solved</th></tr></thead><tbody>` + 
-                list.map((s, i) => `<tr class="border-b ${s.name === currentUser.name ? 'bg-green-100' : ''}"><td class="p-2">#${i+1}</td><td class="p-2 font-medium">${s.name}</td><td class="p-2 font-bold">${s.problemsSolved||0}</td></tr>`).join('') + `</tbody></table>`;
-        };
-
-        document.getElementById('addExtraCareBtn').addEventListener('click', async () => {
-            const id = document.getElementById('extraCareId').value;
-            const student = DB.students.find(s => s.universityID === id);
-            if (!student) return window.showToast('Student not found');
-            try {
-                await addDoc(collection(db, "extracare"), { universityID: id, name: student.name, batch: student.batchNo });
-                window.showToast('Added to Extra Care');
-                loadAllData().then(() => window.renderExtraCareList());
-            } catch(e) { window.showToast('Error'); }
-        });
-
-        window.renderExtraCareList = () => {
-            const container = document.getElementById('extraCareList');
-            if(DB.extraCare.length === 0) return container.innerHTML = '<p class="text-gray-400">List empty.</p>';
-            container.innerHTML = DB.extraCare.map(s => `<div class="bg-pink-50 border border-pink-200 p-3 rounded"><p class="font-bold text-pink-800">${s.name}</p><p class="text-xs text-pink-600">${s.universityID}</p></div>`).join('');
-        };
-
-    </script>
+    <script type="module" src="firebase-config.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
